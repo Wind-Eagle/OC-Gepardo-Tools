@@ -1,0 +1,1 @@
+../infra/dns/hello/main.lua
