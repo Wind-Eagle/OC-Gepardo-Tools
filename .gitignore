@@ -1,2 +1,6 @@
-sync.sh
-.vscode/*
+/.vscode/*
+# Wind-Eagle's local files
+/sync.sh
+# alex65536's local files
+/roll.sh
+/roll.list
