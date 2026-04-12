@@ -69,7 +69,7 @@ local function newDB()
   return obj
 end
 
-function service.serve(cfg, relay)
+function service.start(cfg, relay)
   checkArg(1, cfg, 'table')
   checkArg(2, relay, 'table')
 
@@ -82,7 +82,9 @@ function service.serve(cfg, relay)
   local err = db:reload(fname)
   if err ~= nil then error(err) end
 
-  rpc.serve(port, relay, function(src, method, data)
+  local obj = {}
+
+  local server = rpc.serve(port, relay, function(src, method, data)
     checkArg(1, src, 'string')
     checkArg(2, method, 'string')
     local ok, res = pcall(function()
@@ -130,6 +132,12 @@ function service.serve(cfg, relay)
     if not ok then return nil, 'failed: ' .. res end
     return res, nil
   end)
+
+  function obj:close()
+    server:close()
+  end
+
+  return obj
 end
 
 return service

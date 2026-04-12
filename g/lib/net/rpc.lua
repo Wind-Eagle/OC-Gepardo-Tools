@@ -6,7 +6,6 @@ local event = require('event')
 local math = require('math')
 local serialization = require('serialization')
 local uuid = require('uuid')
-local close = require('g.core.close')
 local run = require('g.core.run')
 local addrs = require('g.lib.net.addrs')
 local Packet = require('g.lib.net.packet')
@@ -82,62 +81,52 @@ function rpc.serve(port, relay, fn)
     port = ports.rpc
   end
 
+  local obj = {}
+
   local addr = modem.address
   if not modem.open(port) then
     error(string.format('cannot open port %d', port))
   end
-  local serverId = uuid.next()
 
-  close.scope(function()
-    close.defer(function() modem.close(port) end)
-
-    local function cb(_, _, _, msgPort, _, rawMsg)
-      if msgPort ~= port then return end
-      run.thread(function()
-        local ok, err = xpcall(function()
-          local packet, err = Packet:decode(rawMsg)
-          if err ~= nil then
-            print('bad packet: ' .. err)
-            return
-          end
-          local data = serialization.unserialize(packet.data)
-          local res, err = fn(packet.src, data.method, data.data)
-          local payload = {id = data.id}
-          if err == nil then
-            payload.data = res
-          else
-            payload.err = err
-          end
-          local rspData = serialization.serialize(payload)
-          local err = relay:send(Packet:new(proto.rpc, addrs.pack(addr, port), packet.src, rspData), math.huge)
-          if err ~= nil then
-            print('could not send response to addr ' .. packet.src .. ': ' .. err '!')
-          end
-        end, function(err)
-          return string.format('%s\n%s', err, debug.traceback())
-        end)
-        if not ok then
-          print('error handling request: ' .. err)
+  local function cb(_, _, _, msgPort, _, rawMsg)
+    if msgPort ~= port then return end
+    run.thread(function()
+      local ok, err = xpcall(function()
+        local packet, err = Packet:decode(rawMsg)
+        if err ~= nil then
+          print('bad packet: ' .. err)
+          return
         end
+        local data = serialization.unserialize(packet.data)
+        local res, err = fn(packet.src, data.method, data.data)
+        local payload = {id = data.id}
+        if err == nil then
+          payload.data = res
+        else
+          payload.err = err
+        end
+        local rspData = serialization.serialize(payload)
+        local err = relay:send(Packet:new(proto.rpc, addrs.pack(addr, port), packet.src, rspData), math.huge)
+        if err ~= nil then
+          print('could not send response to addr ' .. packet.src .. ': ' .. err '!')
+        end
+      end, function(err)
+        return string.format('%s\n%s', err, debug.traceback())
       end)
-    end
-
-    event.listen('modem_message', cb)
-    close.defer(function() event.ignore('modem_message', cb) end)
-
-    while true do
-      local name, arg = event.pullMultiple('interrupted', 'ge_rpc_interrupt')
-      if name == 'interrupted' or (name == 'ge_rpc_interrupt' and arg == serverId) then
-        break
+      if not ok then
+        print('error handling request: ' .. err)
       end
-    end
-  end)
+    end)
+  end
 
-  return {
-    interrupt = function(_)
-      event.send('ge_rpc_interrupt', serverId)
-    end
-  }
+  event.listen('modem_message', cb)
+
+  function obj:close()
+    event.ignore('modem_message', cb)
+    modem.close(port)
+  end
+
+  return obj
 end
 
 return rpc

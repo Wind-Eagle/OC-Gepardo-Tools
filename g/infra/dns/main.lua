@@ -1,6 +1,7 @@
 local run = require('g.core.run')
 
 run.main(function(...)
+  local event = require('event')
   local shell = require('shell')
   local close = require('g.core.close')
   local ioutils = require('g.core.ioutils')
@@ -22,5 +23,7 @@ run.main(function(...)
   end
   local relay = relays.router()
   close.defer(relay)
-  service.serve(cfg, relay)
+  local svc = service.start(cfg, relay)
+  close.defer(svc)
+  event.pull('interrupted')
 end, ...)

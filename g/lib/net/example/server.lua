@@ -1,13 +1,14 @@
 local run = require('g.core.run')
 
 run.main(function(...)
+  local event = require('event')
   local close = require('g.core.close')
   local relays = require('g.lib.net.relays')
   local rpc = require('g.lib.net.rpc')
 
   local relay = relays.router()
   close.defer(relay)
-  rpc.serve(nil, relay, function(src, method, data)
+  local srv = rpc.serve(nil, relay, function(src, method, data)
     checkArg(1, src, 'string')
     checkArg(2, method, 'string')
     checkArg(3, data, 'table')
@@ -21,4 +22,6 @@ run.main(function(...)
     if cb == nil then error('unknown method: ' .. method) end
     return cb()
   end)
+  close.defer(srv)
+  event.pull('interrupted')
 end, ...)
