@@ -84,7 +84,7 @@ function service.start(cfg, relay)
 
   local obj = {}
 
-  local server = rpc.serve(port, relay, function(src, method, data)
+  local srv = rpc.serve(port, relay, function(src, method, data)
     checkArg(1, src, 'string')
     checkArg(2, method, 'string')
     local ok, res = pcall(function()
@@ -134,7 +134,7 @@ function service.start(cfg, relay)
   end)
 
   function obj:close()
-    server:close()
+    srv:close()
   end
 
   return obj
