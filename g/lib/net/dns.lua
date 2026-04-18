@@ -30,6 +30,7 @@ function dns.resolver()
     if uuids.isUuid(name) then return name, nil end
     local rsp, err = client:request(obj.addr, 'lookup', {name = name}, timeout)
     if err ~= nil then return nil, 'lookup: ' .. err end
+    if rsp.addr == nil then return nil, 'lookup: not found' end
     return rsp.addr, nil
   end
 
@@ -41,7 +42,8 @@ function dns.resolver()
       error('address is not uuid')
     end
     local rsp, err = client:request(obj.addr, 'lookup', {addr = addr}, timeout)
-    if err ~= nil then return nil, 'lookup: ' .. err end
+    if err ~= nil then return nil, 'reverse lookup: ' .. err end
+    if rsp.name == nil then return nil, 'reverse lookup: not found' end
     return rsp.name, nil
   end
 

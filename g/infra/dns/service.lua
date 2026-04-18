@@ -1,5 +1,6 @@
 local service = {}
 
+local filesystem = require('filesystem')
 local os = require('os')
 local ioutils = require('g.core.ioutils')
 local addrs = require('g.lib.net.addrs')
@@ -51,14 +52,23 @@ local function newDB()
 
   function obj:reload(fname)
     checkArg(1, fname, 'string')
+    if not filesystem.exists(fname) then return nil end
     local newData, err = ioutils.readAndDecode(fname)
     if err ~= nil then return 'read: ' .. err end
+    if type(newData) ~= 'table' then return 'data is not a table' end
+    if type(newData.a2n) ~= 'table' then return 'data.a2n is not a table' end
+    if type(newData.n2a) ~= 'table' then return 'data.n2a is not a table' end
     data = newData
     return nil
   end
 
   function obj:commit(fname)
     checkArg(1, fname, 'string')
+    local dir = filesystem.path(fname)
+    local ok, err = filesystem.makeDirectory(dir)
+    if not ok and not filesystem.isDirectory(dir) then
+      error('making parent directories: ' .. err)
+    end
     local err = ioutils.writeAndEncode(fname .. '.new', data)
     if err ~= nil then return 'write: ' .. err end
     local ok, err = os.rename(fname .. '.new', fname)
@@ -80,6 +90,8 @@ function service.start(cfg, relay)
 
   local db = newDB()
   local err = db:reload(fname)
+  if err ~= nil then error(err) end
+  local err = db:commit(fname)
   if err ~= nil then error(err) end
 
   local obj = {}
