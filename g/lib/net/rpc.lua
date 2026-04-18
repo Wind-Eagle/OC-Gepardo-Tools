@@ -37,6 +37,7 @@ function rpc.Client:new(relay, resolv)
 
   function obj:request(dst, method, data, timeout)
     local deadline = computer.uptime() + timeout
+    dst = addrs.defaultPort(dst, ports.rpc)
     if resolv ~= nil then
       local dstAddr, dstPort = addrs.unpack(dst)
       local res, err = resolv:lookup(obj, dstAddr, deadline - computer.uptime())
