@@ -1,5 +1,6 @@
 local dns = {}
 
+local computer = require('computer')
 local config = require('g.core.config')
 local uuids = require('g.core.uuids')
 local addrs = require('g.lib.net.addrs')
@@ -18,19 +19,57 @@ function dns.serverAddr()
   return addr
 end
 
-function dns.resolver()
+local function newCache(ttl)
+  checkArg(1, ttl, 'number')
+
+  local obj = {}
+
+  local data = {}
+
+  function obj:put(now, key, val)
+    checkArg(1, now, 'number')
+    data[key] = {val, now + ttl}
+  end
+
+  function obj:get(now, key)
+    checkArg(1, now, 'number')
+    local e = data[key]
+    if e == nil then return nil end
+    local val, exp = e[1], e[2]
+    if exp < now then
+      data[key] = nil
+      return nil
+    end
+    return val
+  end
+
+  return obj
+end
+
+function dns.resolver(cfg)
+  checkArg(1, cfg, 'table', 'nil')
+
+  if cfg == nil then cfg = {} end
+  local ttl = cfg.ttl or 120 -- ttl is in seconds
+
   local obj = {
     addr = dns.serverAddr()
   }
+
+  local cache = newCache(ttl)
+  local rcache = newCache(ttl)
 
   function obj:lookup(client, name, timeout)
     checkArg(1, client, 'table')
     checkArg(2, name, 'string')
     checkArg(3, timeout, 'number')
     if uuids.isUuid(name) then return name, nil end
+    local val = cache:get(computer.uptime(), name)
+    if val ~= nil then return val, nil end
     local rsp, err = client:request(obj.addr, 'lookup', {name = name}, timeout)
     if err ~= nil then return nil, 'lookup: ' .. err end
     if rsp.addr == nil then return nil, 'lookup: not found' end
+    cache:put(computer.uptime(), name, rsp.addr)
     return rsp.addr, nil
   end
 
@@ -41,9 +80,12 @@ function dns.resolver()
     if not uuids.isUuid(addr) then
       error('address is not uuid')
     end
+    local val = rcache:get(computer.uptime(), addr)
+    if val ~= nil then return val, nil end
     local rsp, err = client:request(obj.addr, 'lookup', {addr = addr}, timeout)
     if err ~= nil then return nil, 'reverse lookup: ' .. err end
     if rsp.name == nil then return nil, 'reverse lookup: not found' end
+    rcache:put(computer.uptime(), addr, rsp.name)
     return rsp.name, nil
   end
 
