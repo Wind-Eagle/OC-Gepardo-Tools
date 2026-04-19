@@ -7,10 +7,10 @@ local procs = {}
 local procCtr = 1
 
 local function getState()
-  local data = process.info().data
+  local proc = process.findProcess()
+  local data = proc.data
   if rawget(data, '__geClear') == nil then
-    local proc = process.findProcess()
-    local state = {}
+    local state = {id = procCtr}
     procs[procCtr] = {
       inner = setmetatable({proc = proc}, {__mode='v'}),
       state = state,
@@ -21,11 +21,21 @@ local function getState()
   return rawget(data, '__geClear')
 end
 
+local function resetState(state)
+  local id = state.id
+  local proc = procs[id].inner.proc
+  procs[id] = nil
+  if proc ~= nil then
+    rawset(proc.data, '__geClear', nil)
+  end
+end
+
 local function popScope(state, raiseErr)
   checkArg(1, state, 'table')
   checkArg(2, raiseErr, 'boolean')
   local last = state[#state]
   state[#state] = nil
+  if #state == 0 then resetState(state) end
   local hadErrs = false
   for _, obj in ipairs(last) do
     local ok, err = xpcall(function() obj:close() end, function(err)
@@ -79,7 +89,7 @@ function close.gc()
       while #state ~= 0 do
         popScope(state, false)
       end
-      procs[key] = nil
+      assert(procs[key] == nil, 'must have been removed during last popScope()')
     end
   end
 end
