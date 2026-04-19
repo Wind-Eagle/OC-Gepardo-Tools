@@ -1,6 +1,5 @@
 local rpc = {}
 
-local component = require('component')
 local computer = require('computer')
 local event = require('event')
 local math = require('math')
@@ -13,8 +12,6 @@ local proto = require('g.lib.net.proto')
 local misc = require('g.lib.net.misc')
 local ports = require('g.lib.net.ports')
 
-local modem = component.modem
-
 rpc.Client = {}
 
 function rpc.Client:new(relay, resolv)
@@ -25,6 +22,7 @@ function rpc.Client:new(relay, resolv)
   setmetatable(obj, self)
   self.__index = self
 
+  local modem = relay:modem()
   local addr = modem.address
   local port = misc.pickPort(modem, 32768)
   if port == nil then
@@ -84,6 +82,7 @@ function rpc.serve(port, relay, fn)
 
   local obj = {}
 
+  local modem = relay:modem()
   local addr = modem.address
   if not modem.open(port) then
     error(string.format('cannot open port %d', port))

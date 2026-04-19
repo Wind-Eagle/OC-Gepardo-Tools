@@ -9,10 +9,16 @@ local ports = require('g.lib.net.ports')
 local proto = require('g.lib.net.proto')
 local Packet = require('g.lib.net.packet')
 
-local modem = component.modem
+function relays.direct(modem)
+  checkArg(1, modem, 'table', 'nil')
 
-function relays.direct()
+  if modem == nil then modem = component.modem end
+
   local obj = {}
+
+  function obj:modem()
+    return modem
+  end
 
   function obj:send(packet, timeout)
     checkArg(1, packet, 'table')
@@ -48,7 +54,11 @@ function relays.direct()
   return obj
 end
 
-function relays.router()
+function relays.router(modem)
+  checkArg(1, modem, 'table', 'nil')
+
+  if modem == nil then modem = component.modem end
+
   local obj = {
     id = uuid.next(),
     addr = modem.address,
@@ -75,6 +85,10 @@ function relays.router()
   end
 
   event.listen('modem_message', listener)
+
+  function obj:modem()
+    return modem
+  end
 
   function obj:waitAddr(timeout)
     checkArg(1, timeout, 'number')
