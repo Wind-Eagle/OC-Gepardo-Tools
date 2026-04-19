@@ -22,6 +22,7 @@ local function getState()
 end
 
 local function resetState(state)
+  checkArg(1, state, 'table')
   local id = state.id
   local proc = procs[id].inner.proc
   procs[id] = nil
