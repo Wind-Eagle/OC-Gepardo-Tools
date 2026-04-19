@@ -4,10 +4,11 @@ local computer = require('computer')
 local config = require('g.core.config')
 local uuids = require('g.core.uuids')
 local addrs = require('g.lib.net.addrs')
+local hosts = require('g.lib.net.hosts')
 local ports = require('g.lib.net.ports')
 
 local defaultServerAddr = addrs.defaultPort(
-  config.dnsAddr or '9a9ae872-15f8-44d8-a0e1-594678e13766',
+  config.dnsAddr or hosts['dns.a.test'],
   ports.dns)
 
 function dns.serverAddr()
@@ -64,7 +65,9 @@ function dns.resolver(cfg)
     checkArg(2, name, 'string')
     checkArg(3, timeout, 'number')
     if uuids.isUuid(name) then return name, nil end
-    local val = cache:get(computer.uptime(), name)
+    local val = hosts[name]
+    if val ~= nil then return val, nil end
+    val = cache:get(computer.uptime(), name)
     if val ~= nil then return val, nil end
     local rsp, err = client:request(obj.addr, 'lookup', {name = name}, timeout)
     if err ~= nil then return nil, 'lookup: ' .. err end
