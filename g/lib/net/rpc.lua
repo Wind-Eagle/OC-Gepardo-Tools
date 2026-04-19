@@ -34,14 +34,15 @@ function rpc.Client:new(relay, resolv)
   end
 
   function obj:request(dst, method, data, timeout)
+    checkArg(1, dst, 'string')
+    checkArg(2, method, 'string')
+    checkArg(4, timeout, 'number')
     local deadline = computer.uptime() + timeout
     dst = addrs.defaultPort(dst, ports.rpc)
     if resolv ~= nil then
-      local dstAddr, dstPort = addrs.unpack(dst)
-      local res, err = resolv:lookup(obj, dstAddr, deadline - computer.uptime())
+      local err
+      dst, err = resolv:lookupWithPort(obj, dst, deadline - computer.uptime())
       if err ~= nil then return nil, 'resolve: ' .. err end
-      dstAddr = res
-      dst = addrs.pack(dstAddr, dstPort)
     end
     local id = uuid.next()
     local src = addrs.pack(addr, port)
@@ -76,9 +77,7 @@ function rpc.serve(port, relay, fn)
   checkArg(2, relay, 'table')
   checkArg(3, fn, 'function')
 
-  if port == nil then
-    port = ports.rpc
-  end
+  if port == nil then port = ports.rpc end
 
   local obj = {}
 
@@ -97,6 +96,7 @@ function rpc.serve(port, relay, fn)
           print('bad packet: ' .. err)
           return
         end
+        if packet.proto ~= proto.rpc then return end
         local data = serialization.unserialize(packet.data)
         local res, err = fn(packet.src, data.method, data.data)
         local payload = {id = data.id}

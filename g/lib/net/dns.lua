@@ -76,6 +76,16 @@ function dns.resolver(cfg)
     return rsp.addr, nil
   end
 
+  function obj:lookupWithPort(client, full, timeout)
+    checkArg(1, client, 'table')
+    checkArg(2, full, 'string')
+    checkArg(3, timeout, 'number')
+    local name, port = addrs.unpack(full)
+    local res, err = obj:lookup(client, name, timeout)
+    if err ~= nil then return nil, err end
+    return addrs.pack(res, port)
+  end
+
   function obj:reverseLookup(client, addr, timeout)
     checkArg(1, client, 'table')
     checkArg(2, addr, 'string')
