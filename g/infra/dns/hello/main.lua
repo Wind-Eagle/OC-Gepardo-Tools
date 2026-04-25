@@ -16,7 +16,7 @@ run.main(function(...)
   if options.name == nil then
     error('name is not specified')
   end
-  local relay = relays.router()
+  local relay = relays.direct()
   close.defer(relay)
   local client = rpc.Client:new(relay, nil)
   close.defer(client)

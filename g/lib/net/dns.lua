@@ -8,7 +8,7 @@ local hosts = require('g.lib.net.hosts')
 local ports = require('g.lib.net.ports')
 
 local defaultServerAddr = addrs.defaultPort(
-  config.dnsAddr or hosts['dns.a.test'],
+  config.dnsAddr or hosts['dns.b.test'],
   ports.dns)
 
 function dns.serverAddr()
