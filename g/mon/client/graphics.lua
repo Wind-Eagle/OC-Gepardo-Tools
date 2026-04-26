@@ -69,7 +69,7 @@ local function drawEnergy(gpu, data, x, y)
 end
 
 local function drawEnvironment(gpu, data, x, y)
-  drawBorder(gpu, x, y, 29, 6)
+  drawBorder(gpu, x, y, 33, 6)
 
   local ticks = math.fmod(times.ticksFromEpoch() - 6000, 24000)
   local isRain = false
@@ -85,7 +85,7 @@ function graphics.draw(gpu, data)
   graphics.clearScreen(gpu)
   local _, h = gpu.getResolution()
   drawEnergy(gpu, data, 11, 1)
-  drawEnvironment(gpu, data, 26, h - 6)
+  drawEnvironment(gpu, data, 22, h - 6)
 end
 
 return graphics
