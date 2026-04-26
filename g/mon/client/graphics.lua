@@ -1,7 +1,7 @@
 local graphics = {}
 
 local times = require('g.core.times')
-local timeseries = require('g.mon.lib.ts')
+local timeseries = require('g.mon.lib.timeseries')
 
 function graphics.clearScreen(gpu)
   local w, h = gpu.getResolution()

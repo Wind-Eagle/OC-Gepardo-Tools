@@ -1,4 +1,4 @@
-local tsModule = {}
+local timeseries = {}
 
 local function sortByTimestamp(ts)
   table.sort(ts, function(a, b)
@@ -6,12 +6,12 @@ local function sortByTimestamp(ts)
   end)
 end
 
-function tsModule.pushBack(ts, value, timestamp)
+function timeseries.pushBack(ts, value, timestamp)
   ts[#ts + 1] = {value = value, timestamp = timestamp}
   sortByTimestamp(ts)
 end
 
-function tsModule.trunc(ts, cnt)
+function timeseries.trunc(ts, cnt)
   local n = #ts
   for i = 1, cnt do
     ts[i] = ts[i + n - cnt]
@@ -21,28 +21,28 @@ function tsModule.trunc(ts, cnt)
   end
 end
 
-function tsModule.tail(ts, cnt)
+function timeseries.tail(ts, cnt)
   local tsNew = {}
   for key, value in pairs(ts) do
     tsNew[key] = value
   end
-  tsModule.trunc(tsNew, cnt)
+  timeseries.trunc(tsNew, cnt)
   return tsNew
 end
 
-function tsModule.first(ts)
+function timeseries.first(ts)
   return ts[1]
 end
 
-function tsModule.last(ts)
+function timeseries.last(ts)
   return ts[#ts]
 end
 
-function tsModule.len(ts)
+function timeseries.len(ts)
   return #ts
 end
 
-function tsModule.sum(ts)
+function timeseries.sum(ts)
   local sum = 0
   for _, value in pairs(ts) do
     sum = sum + value
@@ -50,8 +50,33 @@ function tsModule.sum(ts)
   return sum
 end
 
-function tsModule.deriv(ts)
-  return tsModule.last(ts)
+function timeseries.deriv(ts)
+  local n = #ts
+  if n < 2 then
+    return 0
+  end
+
+  local sum_t = 0
+  local sum_v = 0
+  local sum_tt = 0
+  local sum_tv = 0
+
+  for _, p in ipairs(ts) do
+    local t = p.timestamp
+    local v = p.value
+    sum_t = sum_t + t
+    sum_v = sum_v + v
+    sum_tt = sum_tt + t * t
+    sum_tv = sum_tv + t * v
+  end
+
+  local denominator = n * sum_tt - sum_t * sum_t
+  if denominator == 0 then
+    return 0
+  end
+
+  local slope = (n * sum_tv - sum_t * sum_v) / denominator
+  return slope
 end
 
-return tsModule
+return timeseries

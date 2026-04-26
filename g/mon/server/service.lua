@@ -7,8 +7,7 @@ local ioutils = require('g.core.ioutils')
 local ports = require('g.lib.net.ports')
 local rpc = require('g.lib.net.rpc')
 local run = require('g.core.run')
-
-local timeseries = require('g.mon.lib.ts')
+local timeseries = require('g.mon.lib.timeseries')
 
 local modem = component.modem
 

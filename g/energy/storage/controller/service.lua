@@ -3,6 +3,7 @@ local service = {}
 local component = require('component')
 local computer = require('computer')
 local event = require('event')
+local run = require('g.core.run')
 local times = require('g.core.times')
 local ports = require('g.lib.net.ports')
 local rpc = require('g.lib.net.rpc')
@@ -49,7 +50,7 @@ function service.new(cfg, relay, client)
       {signal = 'euCapacity', value = sumCapacity, timestamp = times.ticksFromEpoch()}
     }, 10.0)
     if err ~= nil then
-      error('mon error:', err)
+      error('mon error: ' .. err)
     end
   end
 
@@ -68,9 +69,11 @@ function service.new(cfg, relay, client)
   end
 
   local timer = event.timer(1.0, function()
-    local sumEnergy, sumCapacity, minEnergyLine = getLinesInfo()
-    sendToMon(sumEnergy, sumCapacity)
-    changeRedstone(minEnergyLine)
+    run.thread(function()
+      local sumEnergy, sumCapacity, minEnergyLine = getLinesInfo()
+      sendToMon(sumEnergy, sumCapacity)
+      changeRedstone(minEnergyLine)
+    end)
   end, math.huge)
 
   local srv = push.serve(obj.port, relay, function(src, method, data)
