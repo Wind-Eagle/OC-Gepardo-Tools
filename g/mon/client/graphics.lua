@@ -54,6 +54,7 @@ local function drawBorder(gpu, x, y, w, h)
 end
 
 local function drawEnergy(gpu, data, x, y)
+  if #data < 2 then return end
   local energy = timeseries.last(data[1]).value
   local capacity = timeseries.last(data[2]).value
   local perc = timeseries.last(data[1]).value / timeseries.last(data[2]).value
