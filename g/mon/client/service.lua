@@ -24,7 +24,7 @@ function service.new(cfg, relay, client)
   local dataLoop = loop.run('data', cfg['dataRefreshTime'] or 1.0, function()
     -- TODO(wind-eagle): handle error here
     local _
-    obj.data, _ = client:request(cfg['serverAddress'], 'get', {'euAmount', 'euCapacity'}, 10.0)
+    obj.data, _ = client:request(cfg['serverAddress'], 'get', {'euAmount', 'euCapacity'}, 2.0)
   end)
 
   local drawLoop = loop.run('draw', cfg['screenRefreshTime'] or 1.0, function()

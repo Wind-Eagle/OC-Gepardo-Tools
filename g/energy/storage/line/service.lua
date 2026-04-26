@@ -40,7 +40,7 @@ function service.new(cfg, relay, pushClient)
   local lp = loop.run('push', cfg['broadcastIntervalSeconds'], function()
     local sumEnergy, sumCapacity = getLineInfo()
     local data = {euAmount = sumEnergy, euCapacity = sumCapacity, lineNumber = cfg['lineNumber']}
-    local err = pushClient:request(cfg['energyControllerAddress'], 'energyData', data, 10.0)
+    local err = pushClient:request(cfg['energyControllerAddress'], 'energyData', data, 2.0)
     if err ~= nil then error('push error: ' .. err) end
   end)
 

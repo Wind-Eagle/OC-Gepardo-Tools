@@ -45,8 +45,8 @@ function service.new(cfg, relay, client)
   local function sendToMon(sumEnergy, sumCapacity)
     local _, err = client:request(cfg['monAddress'], 'push', {
       {signal = 'euAmount', value = sumEnergy, timestamp = times.ticksFromEpoch()},
-      {signal = 'euCapacity', value = sumCapacity, timestamp = times.ticksFromEpoch()}
-    }, 10.0)
+      {signal = 'euCapacity', value = sumCapacity, timestamp = times.ticksFromEpoch()},
+    }, 2.0)
     if err ~= nil then
       error('mon error: ' .. err)
     end
