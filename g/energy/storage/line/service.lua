@@ -1,9 +1,8 @@
 local service = {}
 
 local component = require('component')
-local event = require('event')
+local loop = require('g.core.loop')
 local ports = require('g.lib.net.ports')
-local run = require('g.core.run')
 
 local modem = component.modem
 
@@ -38,17 +37,15 @@ function service.new(cfg, relay, pushClient)
     return sumEnergy, sumCapacity
   end
 
-  local timer = event.timer(cfg['broadcastIntervalSeconds'], function()
-    run.thread(function()
-      local sumEnergy, sumCapacity = getLineInfo()
-      local data = {euAmount = sumEnergy, euCapacity = sumCapacity, lineNumber = cfg['lineNumber']}
-      pushClient:request(cfg['energyControllerAddress'], 'energyData', data, 10.0)
-    end)
-  end, math.huge)
-
+  local lp = loop.run('push', cfg['broadcastIntervalSeconds'], function()
+    local sumEnergy, sumCapacity = getLineInfo()
+    local data = {euAmount = sumEnergy, euCapacity = sumCapacity, lineNumber = cfg['lineNumber']}
+    local err = pushClient:request(cfg['energyControllerAddress'], 'energyData', data, 10.0)
+    if err ~= nil then error('push error: ' .. err) end
+  end)
 
   function obj:close()
-    event.cancel(timer)
+    lp:join()
   end
 
   return obj

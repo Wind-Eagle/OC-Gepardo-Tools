@@ -1,11 +1,10 @@
 local service = {}
 
 local component = require('component')
-local event = require('event')
+local loop = require('g.core.loop')
 local ioutils = require('g.core.ioutils')
 local ports = require('g.lib.net.ports')
 local rpc = require('g.lib.net.rpc')
-local run = require('g.core.run')
 local timeseries = require('g.mon.lib.timeseries')
 
 local modem = component.modem
@@ -59,14 +58,12 @@ function service.new(cfg, relay, client)
     return cb()
   end
 
-  local timer = event.timer(cfg['cleanupIntervalSeconds'] or 10.0, function()
-    run.thread(function()
-      for signal, _ in pairs(obj.tsData) do
-        timeseries.trunc(obj.tsData[signal], cfg['storeTailSize'] or 10)
-      end
-      saveData()
-    end)
-  end, math.huge)
+  local lp = loop.run('cleanup', cfg['cleanupIntervalSeconds'] or 10.0, function()
+    for signal, _ in pairs(obj.tsData) do
+      timeseries.trunc(obj.tsData[signal], cfg['storeTailSize'] or 10)
+    end
+    saveData()
+  end)
 
   local srv = rpc.serve(obj.port, relay, function(src, method, data)
     checkArg(1, src, 'string')
@@ -80,7 +77,7 @@ function service.new(cfg, relay, client)
 
   function obj:close()
     srv:close()
-    event.cancel(timer)
+    lp:join()
   end
 
   return obj

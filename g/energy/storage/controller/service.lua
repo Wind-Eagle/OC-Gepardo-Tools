@@ -2,8 +2,7 @@ local service = {}
 
 local component = require('component')
 local computer = require('computer')
-local event = require('event')
-local run = require('g.core.run')
+local loop = require('g.core.loop')
 local times = require('g.core.times')
 local ports = require('g.lib.net.ports')
 local push = require('g.lib.net.push')
@@ -67,13 +66,11 @@ function service.new(cfg, relay, client)
     component.proxy(cfg['lines'][minEnergyLine]['redstone']).setOutput(1, 15)
   end
 
-  local timer = event.timer(1.0, function()
-    run.thread(function()
-      local sumEnergy, sumCapacity, minEnergyLine = getLinesInfo()
-      sendToMon(sumEnergy, sumCapacity)
-      changeRedstone(minEnergyLine)
-    end)
-  end, math.huge)
+  local lp = loop.run('main', 1.0, function()
+    local sumEnergy, sumCapacity, minEnergyLine = getLinesInfo()
+    sendToMon(sumEnergy, sumCapacity)
+    changeRedstone(minEnergyLine)
+  end)
 
   local srv = push.serve(obj.port, relay, function(src, method, data)
     checkArg(1, src, 'string')
@@ -85,8 +82,8 @@ function service.new(cfg, relay, client)
   end)
 
   function obj:close()
+    lp:join()
     srv:close()
-    event.cancel(timer)
   end
 
   return obj

@@ -1,9 +1,8 @@
 local service = {}
 
 local component = require('component')
-local event = require('event')
+local loop = require('g.core.loop')
 local ports = require('g.lib.net.ports')
-local run = require('g.core.run')
 local graphics = require('g.mon.client.graphics')
 
 local modem = component.modem
@@ -22,23 +21,19 @@ function service.new(cfg, relay, client)
   obj.screenAddress = component.screen.address
   graphics.init(obj.gpu, obj.screenAddress)
 
-  local dataTimer = event.timer(cfg['dataRefreshTime'] or 1.0, function()
-    run.thread(function()
-      -- TODO(wind-eagle): handle error here
-      local _
-      obj.data, _ = client:request(cfg['serverAddress'], 'get', {'euAmount', 'euCapacity'}, 10.0)
-    end)
-  end, math.huge)
+  local dataLoop = loop.run('data', cfg['dataRefreshTime'] or 1.0, function()
+    -- TODO(wind-eagle): handle error here
+    local _
+    obj.data, _ = client:request(cfg['serverAddress'], 'get', {'euAmount', 'euCapacity'}, 10.0)
+  end)
 
-  local drawTimer = event.timer(cfg['screenRefreshTime'] or 1.0, function()
-    run.thread(function()
-      graphics.draw(obj.gpu, obj.data)
-    end)
-  end, math.huge)
+  local drawLoop = loop.run('draw', cfg['screenRefreshTime'] or 1.0, function()
+    graphics.draw(obj.gpu, obj.data)
+  end)
 
   function obj:close()
-    event.cancel(dataTimer)
-    event.cancel(drawTimer)
+    dataLoop:join()
+    drawLoop:join()
   end
 
   return obj
