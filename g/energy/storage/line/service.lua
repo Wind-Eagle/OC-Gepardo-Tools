@@ -41,10 +41,8 @@ function service.new(cfg, relay, pushClient)
   local timer = event.timer(cfg['broadcastIntervalSeconds'], function()
     run.thread(function()
       local sumEnergy, sumCapacity = getLineInfo()
-      pushClient:request(
-        cfg['energyControllerAddress'], 'energyData',
-        {euAmount = sumEnergy, euCapacity = sumCapacity, lineNumber = cfg['lineNumber']},
-        10.0)
+      local data = {euAmount = sumEnergy, euCapacity = sumCapacity, lineNumber = cfg['lineNumber']}
+      pushClient:request(cfg['energyControllerAddress'], 'energyData', data, 10.0)
     end)
   end, math.huge)
 
