@@ -2,10 +2,7 @@ local service = {}
 
 local component = require('component')
 local event = require('event')
-local ioutils = require('g.core.ioutils')
-local serialization = require('serialization')
 local ports = require('g.lib.net.ports')
-local rpc = require('g.lib.net.rpc')
 local run = require('g.core.run')
 local graphics = require('g.mon.client.graphics')
 
@@ -27,8 +24,9 @@ function service.new(cfg, relay, client)
 
   local dataTimer = event.timer(cfg['dataRefreshTime'] or 1.0, function()
     run.thread(function()
-      local err
-      obj.data, err = client:request(cfg['serverAddress'], 'get', {'euAmount', 'euCapacity'}, 10.0)
+      -- TODO(wind-eagle): handle error here
+      local _
+      obj.data, _ = client:request(cfg['serverAddress'], 'get', {'euAmount', 'euCapacity'}, 10.0)
     end)
   end, math.huge)
 

@@ -2,7 +2,6 @@ local service = {}
 
 local component = require('component')
 local event = require('event')
-local serialization = require('serialization')
 local ioutils = require('g.core.ioutils')
 local ports = require('g.lib.net.ports')
 local rpc = require('g.lib.net.rpc')

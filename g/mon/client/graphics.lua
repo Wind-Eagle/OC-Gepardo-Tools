@@ -61,7 +61,9 @@ local function drawEnergy(gpu, data, x, y)
 
   drawBorder(gpu, x, y, 60, 9)
   gpu.set(x + 22, y + 2, 'Energy storage')
-  gpu.set(x + 5, y + 4, string.format('EU: %.3fM / %.3fM (%.3f%%), %.3f EU/t', energy / 1000000, capacity / 1000000, perc * 100, euT))
+  gpu.set(
+    x + 5, y + 4,
+    string.format('EU: %.3fM / %.3fM (%.3f%%), %.3f EU/t', energy / 1000000, capacity / 1000000, perc * 100, euT))
   drawProgressBar(gpu, x + 5, y + 6, 50, perc)
 end
 
@@ -80,7 +82,7 @@ end
 
 function graphics.draw(gpu, data)
   graphics.clearScreen(gpu)
-  local w, h = gpu.getResolution()
+  local _, h = gpu.getResolution()
   drawEnergy(gpu, data, 11, 1)
   drawEnvironment(gpu, data, 26, h - 6)
 end

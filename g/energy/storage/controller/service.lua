@@ -6,7 +6,6 @@ local event = require('event')
 local run = require('g.core.run')
 local times = require('g.core.times')
 local ports = require('g.lib.net.ports')
-local rpc = require('g.lib.net.rpc')
 local push = require('g.lib.net.push')
 
 local modem = component.modem
@@ -45,7 +44,7 @@ function service.new(cfg, relay, client)
   end
 
   local function sendToMon(sumEnergy, sumCapacity)
-    local rsp, err = client:request(cfg['monAddress'], 'push', {
+    local _, err = client:request(cfg['monAddress'], 'push', {
       {signal = 'euAmount', value = sumEnergy, timestamp = times.ticksFromEpoch()},
       {signal = 'euCapacity', value = sumCapacity, timestamp = times.ticksFromEpoch()}
     }, 10.0)

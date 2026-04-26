@@ -1,7 +1,6 @@
 local service = {}
 
 local component = require('component')
-local computer = require('computer')
 local event = require('event')
 local ports = require('g.lib.net.ports')
 local run = require('g.core.run')
@@ -42,7 +41,10 @@ function service.new(cfg, relay, pushClient)
   local timer = event.timer(cfg['broadcastIntervalSeconds'], function()
     run.thread(function()
       local sumEnergy, sumCapacity = getLineInfo()
-      pushClient:request(cfg['energyControllerAddress'], 'energyData', {euAmount = sumEnergy, euCapacity = sumCapacity, lineNumber = cfg['lineNumber']}, 10.0)
+      pushClient:request(
+        cfg['energyControllerAddress'], 'energyData',
+        {euAmount = sumEnergy, euCapacity = sumCapacity, lineNumber = cfg['lineNumber']},
+        10.0)
     end)
   end, math.huge)
 
