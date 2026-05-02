@@ -33,9 +33,8 @@ UUID_RE = re.compile('^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 preset = None
 if len(sys.argv) > 2:
-    print('error: too many arguments')
     print(f'usage: {sys.argv[0] if len(sys.argv) > 0 else "roll.py"} [PRESET]')
-    sys.exit(1)
+    raise Exception('too many arguments!')
 if len(sys.argv) == 2:
     preset = sys.argv[1]
 
