@@ -59,6 +59,8 @@ if not isinstance(params, dict):
 path = Path(ensure(params, 'path', str))
 if path.name != 'opencomputers':
     raise Exception(f'{str(path)!r} must end with "opencomputers"')
+if not path.is_dir():
+    raise Exception(f'{str(path)!r} must exist and be a directory!')
 comps = ensure_list(params, 'comps', str)
 dirs = ensure_list(params, 'dirs', str)
 rmdirs = ensure_list(params, 'rmdirs', str, default=lambda: [])
@@ -77,7 +79,7 @@ for comp in comps:
         dst = target / dir
         if dst.exists():
             shutil.rmtree(dst)
-        shutil.copytree(src, dst, symlinks=False, dirs_exist_ok=False)
+        shutil.copytree(src, dst, symlinks=True, dirs_exist_ok=False)
     for dir in rmdirs:
         dst = target / dir
         if dst.exists():
